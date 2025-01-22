@@ -1,6 +1,6 @@
 { 
   "builtin":[
-    {"name":"extension-sideloader", "url":"https://open-vsx.org/api/andrewhertog/extension-sideloader/0.0.5/file/andrewhertog.extension-sideloader-0.0.5.vsix"}
+    {"name":"extension-sideloader", "url":"https://open-vsx.org/api/andrewhertog/extension-sideloader/0.0.6/file/andrewhertog.extension-sideloader-0.0.6.vsix"}
   ],
   "sideloaded":[
     "project-accelerate.codex-editor-extension",
