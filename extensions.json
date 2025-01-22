@@ -4,6 +4,7 @@
   ],
   "sideloaded":[
     "project-accelerate.codex-editor-extension",
-    "project-accelerate.shared-state-store"
+    "project-accelerate.shared-state-store",
+    "frontier-rnd.frontier-authentication"
   ]
 }
