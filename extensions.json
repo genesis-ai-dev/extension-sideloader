@@ -1,10 +1,11 @@
 { 
   "builtin":[
-    {"name":"extension-sideloader", "url":"https://open-vsx.org/api/andrewhertog/extension-sideloader/0.0.6/file/andrewhertog.extension-sideloader-0.0.6.vsix"}
+    {"name":"extension-sideloader", "url":"https://open-vsx.org/api/andrewhertog/extension-sideloader/0.0.7/file/andrewhertog.extension-sideloader-0.0.7.vsix"}
   ],
   "sideloaded":[
     "project-accelerate.codex-editor-extension",
     "project-accelerate.shared-state-store",
+    "project-accelerate.vscode-edit-table",
     "frontier-rnd.frontier-authentication"
   ]
 }
