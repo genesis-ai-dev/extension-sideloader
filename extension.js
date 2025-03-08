@@ -17,23 +17,19 @@ function activate(context) {
 
     const installExtensionCommand = 'workbench.extensions.installExtension';
 	get_extensions().then((extensions) => {;
-		console.log(extensions)
 		for(const ext of extensions.sideloaded ){
 			if (vscode.extensions.getExtension(ext) == undefined) {
 
 				vscode.commands.executeCommand(installExtensionCommand, ext).then(
 					() => {
 						console.log(`Extension ${ext} installed successfully.`);
-						vscode.window.showInformationMessage(`Extension ${ext} installed successfully.`);
 					},
 					(error) => {
 						console.error(`Failed to install extension ${ext}:`, error);
-						vscode.window.showErrorMessage(`Failed to install extension ${ext}: ${error}`);
 					}
 				);
 			} else {
 				console.log(`Extension ${ext} is already installed.`);
-				vscode.window.showInformationMessage(`Extension ${ext} is already installed.`);
 			}
 		}
 	});
