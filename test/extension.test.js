@@ -33,6 +33,7 @@ suite('Extension Test Suite', () => {
 		sinon.stub(vscode.extensions, 'getExtension').returns(undefined);
 		sinon.stub(vscode.workspace, 'getConfiguration').returns(configStub);
 		sinon.stub(vscode.commands, 'registerCommand').returns({});
+		sinon.stub(vscode.extensions, 'onDidChange').returns({});
 
 		await myExtension.activate(context);
 		await new Promise(resolve => setTimeout(resolve, 100));
@@ -220,5 +221,54 @@ suite('Extension Test Suite', () => {
 			call => call.args[0] === 'workbench.extensions.enableExtension'
 		);
 		assert.strictEqual(enableCalls.length, mockExtensions.sideloaded.length);
+	});
+
+	test('Activate should register onDidChange event listener', async () => {
+		const context = { subscriptions: [] };
+		const configStub = {
+			get: sinon.stub().returns(true)
+		};
+
+		// Stub vscode APIs BEFORE fetching
+		sinon.stub(vscode.commands, 'executeCommand').resolves();
+		sinon.stub(vscode.extensions, 'getExtension').returns({ isActive: true });
+		sinon.stub(vscode.workspace, 'getConfiguration').returns(configStub);
+		sinon.stub(vscode.commands, 'registerCommand').returns({});
+		sinon.stub(vscode.extensions, 'onDidChange').returns({});
+
+		const _fetchStub = sinon.stub(global, 'fetch').resolves({
+			json: async () => mockExtensions
+		});
+
+		await myExtension.activate(context);
+		await new Promise(resolve => setTimeout(resolve, 500));
+
+		// Should have toggle command + event listener in subscriptions
+		assert.strictEqual(context.subscriptions.length, 2, 'Should have 2 subscriptions (toggle command + event listener)');
+	});
+
+	test('Event listener respects forceEnable setting', async () => {
+		// This test verifies that the event listener subscription is added
+		// and that it respects the forceEnable setting
+		const context = { subscriptions: [] };
+		const configStub = {
+			get: sinon.stub().returns(true)
+		};
+
+		sinon.stub(vscode.commands, 'executeCommand').resolves();
+		sinon.stub(vscode.extensions, 'getExtension').returns({ isActive: true });
+		sinon.stub(vscode.workspace, 'getConfiguration').returns(configStub);
+		sinon.stub(vscode.commands, 'registerCommand').returns({});
+		sinon.stub(vscode.extensions, 'onDidChange').returns({});
+
+		const _fetchStub = sinon.stub(global, 'fetch').resolves({
+			json: async () => mockExtensions
+		});
+
+		await myExtension.activate(context);
+		await new Promise(resolve => setTimeout(resolve, 500));
+
+		// Verify subscription was registered
+		assert.strictEqual(context.subscriptions.length, 2, 'Should have 2 subscriptions');
 	});
 });

@@ -36,40 +36,89 @@ function activate(context) {
 
 	context.subscriptions.push(toggleCommand);
 
-	get_extensions().then((extensions) => {;
+	// Initial check and install missing extensions on startup
+	get_extensions().then((extensions) => {
 		const config = vscode.workspace.getConfiguration('extensionSideloader');
 		const forceEnable = config.get('forceEnable', true);
 
-		for(const ext of extensions.sideloaded ){
-			const extension = vscode.extensions.getExtension(ext);
+		checkAndInstallExtensions(extensions.sideloaded, forceEnable, installExtensionCommand, enableExtensionCommand);
 
-			if (extension == undefined) {
-				// Extension not installed, install it
-				vscode.commands.executeCommand(installExtensionCommand, ext).then(
+		// Monitor extension state changes
+		const extensionChangeListener = vscode.extensions.onDidChange(() => {
+			const currentConfig = vscode.workspace.getConfiguration('extensionSideloader');
+			const currentForceEnable = currentConfig.get('forceEnable', true);
+
+			// Only check for disabled extensions if force enable is on
+			if (currentForceEnable) {
+				checkDisabledExtensions(extensions.sideloaded, enableExtensionCommand);
+			}
+		});
+
+		context.subscriptions.push(extensionChangeListener);
+	});
+}
+
+/**
+ * Check and install missing extensions, and enable disabled ones
+ * @param {string[]} sideloadedExtensions - Array of extension IDs to check
+ * @param {boolean} forceEnable - Whether to force enable disabled extensions
+ * @param {string} installCommand - Command to install extensions
+ * @param {string} enableCommand - Command to enable extensions
+ */
+function checkAndInstallExtensions(sideloadedExtensions, forceEnable, installCommand, enableCommand) {
+	for(const ext of sideloadedExtensions) {
+		const extension = vscode.extensions.getExtension(ext);
+
+		if (extension == undefined) {
+			// Extension not installed, install it
+			vscode.commands.executeCommand(installCommand, ext).then(
+				() => {
+					console.log(`Extension ${ext} installed successfully.`);
+				},
+				(error) => {
+					console.error(`Failed to install extension ${ext}:`, error);
+				}
+			);
+		} else {
+			// Extension is installed, check if it's disabled and if force enable is on
+			if (!extension.isActive && forceEnable) {
+				vscode.commands.executeCommand(enableCommand, ext).then(
 					() => {
-						console.log(`Extension ${ext} installed successfully.`);
+						console.log(`Extension ${ext} enabled successfully.`);
 					},
 					(error) => {
-						console.error(`Failed to install extension ${ext}:`, error);
+						console.error(`Failed to enable extension ${ext}:`, error);
 					}
 				);
 			} else {
-				// Extension is installed, check if it's disabled and if force enable is on
-				if (!extension.isActive && forceEnable) {
-					vscode.commands.executeCommand(enableExtensionCommand, ext).then(
-						() => {
-							console.log(`Extension ${ext} enabled successfully.`);
-						},
-						(error) => {
-							console.error(`Failed to enable extension ${ext}:`, error);
-						}
-					);
-				} else {
-					console.log(`Extension ${ext} is already installed and active.`);
-				}
+				console.log(`Extension ${ext} is already installed and active.`);
 			}
 		}
-	});
+	}
+}
+
+/**
+ * Check if any sideloaded extensions are disabled and attempt to re-enable them
+ * @param {string[]} sideloadedExtensions - Array of extension IDs to check
+ * @param {string} enableCommand - Command to enable extensions
+ */
+function checkDisabledExtensions(sideloadedExtensions, enableCommand) {
+	for(const ext of sideloadedExtensions) {
+		const extension = vscode.extensions.getExtension(ext);
+
+		// Only attempt to enable if extension is installed but not active
+		if (extension && !extension.isActive) {
+			console.log(`Detected that extension ${ext} is not active, attempting to enable...`);
+			vscode.commands.executeCommand(enableCommand, ext).then(
+				() => {
+					console.log(`Extension ${ext} re-enabled successfully.`);
+				},
+				(error) => {
+					console.error(`Failed to re-enable extension ${ext}:`, error);
+				}
+			);
+		}
+	}
 }
 
 // This method is called when your extension is deactivated
