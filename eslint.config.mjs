@@ -2,6 +2,7 @@ import globals from "globals";
 
 export default [{
     files: ["**/*.js"],
+    ignores: ["node_modules/**", ".vscode-test/**"],
     languageOptions: {
         globals: {
             ...globals.commonjs,
@@ -18,7 +19,7 @@ export default [{
         "no-this-before-super": "warn",
         "no-undef": "warn",
         "no-unreachable": "warn",
-        "no-unused-vars": "warn",
+        "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
         "constructor-super": "warn",
         "valid-typeof": "warn",
     },

@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/andrewhertog/extension-sideloader"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.93.0"
   },
@@ -19,6 +19,24 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension-sideloader.toggleForceEnable",
+        "title": "Extension Sideloader: Toggle Force Enable"
+      }
+    ],
+    "configuration": {
+      "title": "Extension Sideloader",
+      "properties": {
+        "extensionSideloader.forceEnable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically enable disabled sideloaded extensions"
+        }
+      }
+    }
+  },
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
