@@ -16,10 +16,14 @@ const vscode = require('vscode');
 function activate(context) {
 
     const installExtensionCommand = 'workbench.extensions.installExtension';
+	const enableExtensionCommand = 'workbench.extensions.enableExtension';
+
 	get_extensions().then((extensions) => {;
 		for(const ext of extensions.sideloaded ){
-			if (vscode.extensions.getExtension(ext) == undefined) {
+			const extension = vscode.extensions.getExtension(ext);
 
+			if (extension == undefined) {
+				// Extension not installed, install it
 				vscode.commands.executeCommand(installExtensionCommand, ext).then(
 					() => {
 						console.log(`Extension ${ext} installed successfully.`);
@@ -29,7 +33,19 @@ function activate(context) {
 					}
 				);
 			} else {
-				console.log(`Extension ${ext} is already installed.`);
+				// Extension is installed, check if it's disabled
+				if (!extension.isActive) {
+					vscode.commands.executeCommand(enableExtensionCommand, ext).then(
+						() => {
+							console.log(`Extension ${ext} enabled successfully.`);
+						},
+						(error) => {
+							console.error(`Failed to enable extension ${ext}:`, error);
+						}
+					);
+				} else {
+					console.log(`Extension ${ext} is already installed and active.`);
+				}
 			}
 		}
 	});

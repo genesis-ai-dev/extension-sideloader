@@ -4,46 +4,70 @@ const vscode = require('vscode');
 const assert = require('assert');
 const sinon = require('sinon');
 const myExtension = require('../extension');
-const extensions = require('../extensions.test.json');
-// const myExtension = require('../extension');
 
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
+	let executeCommandStub;
+	let getExtensionStub;
+	let fetchStub;
 
-	suite('Extension Test Suite', () => {
-		vscode.window.showInformationMessage('Start all tests.');
+	const mockExtensions = {
+		sideloaded: [
+			"test.extension1",
+			"test.extension2",
+			"test.extension3"
+		]
+	};
 
-		test('Activate function should install missing extensions', async () => {
-			const context = { subscriptions: [] };
-			const executeCommandStub = sinon.stub(vscode.commands, 'executeCommand').resolves();
-			const getExtensionStub = sinon.stub(vscode.extensions, 'getExtension').returns(undefined);
-			const showInformationMessageStub = sinon.stub(vscode.window, 'showInformationMessage');
+	teardown(() => {
+		sinon.restore();
+	});
 
-			await myExtension.activate(context);
+	test('Activate function should install missing extensions', async () => {
+		const context = { subscriptions: [] };
 
-			assert.strictEqual(executeCommandStub.callCount, extensions.length);
-			assert.strictEqual(showInformationMessageStub.callCount, extensions.length);
-
-			executeCommandStub.restore();
-			getExtensionStub.restore();
-			showInformationMessageStub.restore();
+		fetchStub = sinon.stub(global, 'fetch').resolves({
+			json: async () => mockExtensions
 		});
+		executeCommandStub = sinon.stub(vscode.commands, 'executeCommand').resolves();
+		getExtensionStub = sinon.stub(vscode.extensions, 'getExtension').returns(undefined);
 
-		test('Activate function should not reinstall already installed extensions', async () => {
-			const context = { subscriptions: [] };
-			const executeCommandStub = sinon.stub(vscode.commands, 'executeCommand').resolves();
-			const getExtensionStub = sinon.stub(vscode.extensions, 'getExtension').returns({});
-			const showInformationMessageStub = sinon.stub(vscode.window, 'showInformationMessage');
+		await myExtension.activate(context);
+		await new Promise(resolve => setTimeout(resolve, 100));
 
-			await myExtension.activate(context);
+		assert.strictEqual(executeCommandStub.callCount, mockExtensions.sideloaded.length);
+		assert.ok(executeCommandStub.alwaysCalledWith('workbench.extensions.installExtension'));
+	});
 
-			assert.strictEqual(executeCommandStub.callCount, 0);
-			assert.strictEqual(showInformationMessageStub.callCount, extensions.length);
+	test('Activate function should not reinstall already installed and active extensions', async () => {
+		const context = { subscriptions: [] };
 
-			executeCommandStub.restore();
-			getExtensionStub.restore();
-			showInformationMessageStub.restore();
+		fetchStub = sinon.stub(global, 'fetch').resolves({
+			json: async () => mockExtensions
 		});
+		executeCommandStub = sinon.stub(vscode.commands, 'executeCommand').resolves();
+		getExtensionStub = sinon.stub(vscode.extensions, 'getExtension').returns({ isActive: true });
+
+		await myExtension.activate(context);
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		assert.strictEqual(executeCommandStub.callCount, 0);
+	});
+
+	test('Activate function should enable disabled extensions', async () => {
+		const context = { subscriptions: [] };
+
+		fetchStub = sinon.stub(global, 'fetch').resolves({
+			json: async () => mockExtensions
+		});
+		executeCommandStub = sinon.stub(vscode.commands, 'executeCommand').resolves();
+		getExtensionStub = sinon.stub(vscode.extensions, 'getExtension').returns({ isActive: false });
+
+		await myExtension.activate(context);
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		assert.strictEqual(executeCommandStub.callCount, mockExtensions.sideloaded.length);
+		assert.ok(executeCommandStub.alwaysCalledWith('workbench.extensions.enableExtension'));
 	});
 });
