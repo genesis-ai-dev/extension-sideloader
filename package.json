@@ -19,6 +19,24 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension-sideloader.toggleForceEnable",
+        "title": "Extension Sideloader: Toggle Force Enable"
+      }
+    ],
+    "configuration": {
+      "title": "Extension Sideloader",
+      "properties": {
+        "extensionSideloader.forceEnable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically enable disabled sideloaded extensions"
+        }
+      }
+    }
+  },
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",

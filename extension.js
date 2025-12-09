@@ -18,7 +18,28 @@ function activate(context) {
     const installExtensionCommand = 'workbench.extensions.installExtension';
 	const enableExtensionCommand = 'workbench.extensions.enableExtension';
 
+	// Register toggle command
+	const toggleCommand = vscode.commands.registerCommand('extension-sideloader.toggleForceEnable', () => {
+		const config = vscode.workspace.getConfiguration('extensionSideloader');
+		const currentValue = config.get('forceEnable', true);
+		config.update('forceEnable', !currentValue, vscode.ConfigurationTarget.Global).then(
+			() => {
+				vscode.window.showInformationMessage(
+					`Extension Sideloader: Force enable is now ${!currentValue ? 'enabled' : 'disabled'}`
+				);
+			},
+			(error) => {
+				vscode.window.showErrorMessage(`Failed to update setting: ${error}`);
+			}
+		);
+	});
+
+	context.subscriptions.push(toggleCommand);
+
 	get_extensions().then((extensions) => {;
+		const config = vscode.workspace.getConfiguration('extensionSideloader');
+		const forceEnable = config.get('forceEnable', true);
+
 		for(const ext of extensions.sideloaded ){
 			const extension = vscode.extensions.getExtension(ext);
 
@@ -33,8 +54,8 @@ function activate(context) {
 					}
 				);
 			} else {
-				// Extension is installed, check if it's disabled
-				if (!extension.isActive) {
+				// Extension is installed, check if it's disabled and if force enable is on
+				if (!extension.isActive && forceEnable) {
 					vscode.commands.executeCommand(enableExtensionCommand, ext).then(
 						() => {
 							console.log(`Extension ${ext} enabled successfully.`);
